@@ -1,17 +1,10 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
-```{r echo=FALSE,eval=TRUE}
-library(ggplot2)
-options(scipen=999)
-```
+# Reproducible Research: Peer Assessment 1
+
 
 
 ## Loading and preprocessing the data
-```{r echo=TRUE, eval=TRUE}
+
+```r
 df<-read.csv(unz("activity.zip","activity.csv"))
 df$datetime<-paste(as.character(df$date),as.character(formatC(df$interval, width = 4, format = "d", flag = "0")),sep = ' ')
 df$datetime<-strptime(df$datetime,format = "%Y-%m-%d %H%M")
@@ -20,25 +13,34 @@ df$datetime<-strptime(df$datetime,format = "%Y-%m-%d %H%M")
 
 ## What is mean total number of steps taken per day?
 #### Aggregating the data on date and calulating total number of steps:
-```{r echo=TRUE, eval=TRUE,warning=FALSE}
+
+```r
 daygroup<-aggregate(df$steps, by=list(df$date), FUN=sum)
 total_steps<-sum(unlist(daygroup[2]),na.rm = T)
 total_steps
 ```
+
+```
+## [1] 570608
+```
 #### Histogram of steps pr day
-```{r echo=TRUE}
+
+```r
 a<-ggplot(daygroup,aes(x))
 a+geom_histogram(binwidth = 1000,na.rm = TRUE)+labs(title ="Steps pr day", x = "Number of steps", y = "count")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)
+
 
 #### Mean and median number of steps pr day
 
-the mean value is `r round(mean(unlist(daygroup[2]),na.rm = TRUE),2)` , and the median is `r median(unlist(daygroup[2]),na.rm = TRUE)`
+the mean value is 10766.19 , and the median is 10765
 
 ## What is the average daily activity pattern?
 #### Aggregating the data on the different time intervals:
-```{r echo=TRUE, eval=TRUE}
+
+```r
 df_nona<-df[!is.na(df$steps),]
 intervalgroup<-aggregate(df_nona$steps, by=list(as.factor(df_nona$interval)), FUN=mean)
 names(intervalgroup)<-c("INTERVAL","STEPS")
@@ -47,24 +49,38 @@ intervalgroup$INTERVAL<-strptime(intervalgroup$INTERVAL,format="%H%M",tz = "GMT"
 ```
 
 #### Plot of the average steps across the day
-```{r echo=TRUE}
+
+```r
 b<-ggplot(intervalgroup,aes(INTERVAL,STEPS))
 b+scale_x_datetime(date_breaks = "2 hours",date_labels = "%H:%M")+geom_line()
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)
+
 ####The interval with the highest average number of steps
-```{r echo=TRUE}
+
+```r
 strftime(intervalgroup[order(intervalgroup$STEPS,decreasing = TRUE),][1,1],format = "%H:%M")
+```
+
+```
+## [1] "08:35"
 ```
 
 
 ## Imputing missing values
-```{r echo=TRUE}
+
+```r
 #The total number of NA's in the data set is:
 sum(is.na(df$steps))
 ```
+
+```
+## [1] 2304
+```
 #### adding missing values
-```{r echo=TRUE}
+
+```r
 #a missing value is imputed as the mean of time interval
 df_nona<-df[!is.na(df$steps),]
 impute_data<-aggregate(df_nona$steps, by=list(as.factor(df_nona$interval)), FUN=mean)
@@ -78,21 +94,28 @@ for (nan_i in nan_index) {
 daygroup2<-aggregate(df2$steps, by=list(df2$date), FUN=sum)
 total_steps<-sum(unlist(daygroup2[2]),na.rm = T)
 total_steps
+```
 
 ```
+## [1] 656737.5
+```
 #### Histogram of steps pr day with NA values imputed
-```{r echo=TRUE}
+
+```r
 c<-ggplot(daygroup2,aes(x))
 c+geom_histogram(binwidth = 1000,na.rm = TRUE)+labs(title ="Steps pr day", x = "Number of steps", y = "count")
 ```
 
-the mean value is `r round(mean(unlist(daygroup2[2]),na.rm = TRUE),2) `, and the median is `r round(median(unlist(daygroup2[2])),2)`
+![](PA1_template_files/figure-html/unnamed-chunk-10-1.png)
+
+the mean value is 10766.19, and the median is 10766.19
 It seems that imputing the missing values as the mean of the interval doesn't affect the mean, but the median is now equal to mean.
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
 ####adding weekdays to the dataset
-```{r echo=TRUE}
+
+```r
 df2$datetime<-paste(as.character(df2$date),as.character(formatC(df2$interval, width = 4, format = "d", flag = "0")),sep = ' ')
 df2$datetime<-strptime(df2$datetime,format = "%Y-%m-%d %H%M")
 df2$weekday<-weekdays(df2$datetime)
@@ -103,7 +126,10 @@ intervalgroup2$interval<-sprintf("%04s", as.character(intervalgroup2$interval))
 intervalgroup2$interval<-strptime(intervalgroup2$interval,format="%H%M",tz = "GMT")
 ```
 ####Differences in the activity in weekdays and weekends
-```{r echo=TRUE}
+
+```r
 d<-ggplot(intervalgroup2,aes(interval,steps))
 d+scale_x_datetime(date_breaks = "2 hours",date_labels = "%H:%M")+geom_line()+facet_grid(day_category~.)
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-12-1.png)
